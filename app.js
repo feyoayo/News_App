@@ -65,9 +65,9 @@ const newsService = (function () {
   // const apiUrl = "http://newsapi.org/v2";
 
   return {
-    topHeadlines(country = "ua", cb) {
+    topHeadlines(country = "ua", category = "general", cb) {
       http.get(
-        `${apiUrl}/top-headlines?country=${country}&category=technology&apiKey=${apiKey}`,
+        `${apiUrl}/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}`,
         cb
       );
     },
@@ -81,12 +81,20 @@ const newsService = (function () {
 const form = document.forms["newsControls"];
 const countrySelect = form.elements["country"];
 const searchInput = form.elements["search"];
+const categorySelect = form.elements["category"];
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   loadNews();
 });
-
+categorySelect.addEventListener("change", (e) => {
+  loadNews();
+  //Сделал так, чтобы при смене категории сразу отрисовывались необходимые для этой категории новости, без необходимости нажатия ентера или кнопки
+});
+countrySelect.addEventListener("change", (e) => {
+  loadNews();
+  //Аналогично что и выше
+});
 //  init selects
 document.addEventListener("DOMContentLoaded", function () {
   M.AutoInit();
@@ -99,10 +107,11 @@ function loadNews() {
   //!Делает запрос на указаный адрессат, передает что мы хотим обратиться на ТопХедлайнс, передаем страну ua и коллбек(отрабатывает когда сервер возвращает ответ)
   const country = countrySelect.value;
   const searchText = searchInput.value;
+  const category = categorySelect.value;
 
   //Если нет текста в поле ввода поиска, тогда выводить топХедлайны по выбраной стране. Если есть текст в строке, то выводить по заданому запросу
   if (!searchText) {
-    newsService.topHeadlines(country, onGetResponse);
+    newsService.topHeadlines(country, category, onGetResponse);
   } else {
     newsService.everything(searchText, onGetResponse);
   }
@@ -155,6 +164,9 @@ function clearContainer(container) {
 
 //News item template function
 function newsTemplate({ urlToImage, title, url, description }) {
+  if (!urlToImage) {
+    urlToImage.style.background = "red";
+  }
   //!На основе одной новости мы формируем разметку и возвращаем ее
   return `
     <div class="col s12">
